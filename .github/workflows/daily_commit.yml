@@ -1,0 +1,40 @@
+name: Niubi's Daily Commits
+
+on:
+  schedule:
+    - cron: '0 23 * * *'   # First commit at 11:00 PM UTC
+    - cron: '15 23 * * *'  # Second commit at 11:15 PM UTC
+    - cron: '30 23 * * *'  # Third commit at 11:30 PM UTC
+    - cron: '45 23 * * *'  # Fourth commit at 11:45 PM UTC
+
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0  # Ensures full history for better tracking
+
+    - name: Create file and commit
+      run: |
+        FILE="commit_number.md"
+        
+        if [ ! -f "$FILE" ]; then
+          echo "Hello, my name is Niubi Verse" > "$FILE"
+          echo "commit number: 1" >> "$FILE"
+        else
+          CURRENT_COUNT=$(grep -oP 'commit number: \K\d+' "$FILE" || echo "0")
+          NEXT_COUNT=$((CURRENT_COUNT + 1))
+          sed -i "/commit number: /c\commit number: $NEXT_COUNT" "$FILE"
+        fi
+
+        git config --global user.name "niubi-verse"
+        git config --global user.email "niubiverse@gmail.com"
+
+        git add "$FILE"
+        git commit -m "Automated commit #$NEXT_COUNT"
+        git push origin main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
