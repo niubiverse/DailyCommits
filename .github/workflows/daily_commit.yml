@@ -1,40 +1,56 @@
-name: Niubi's Daily Commits
+name: Niubi's Natural Commits
 
 on:
   schedule:
-    - cron: '0 23 * * *'   # First commit at 11:00 PM UTC
-    - cron: '15 23 * * *'  # Second commit at 11:15 PM UTC
-    - cron: '30 23 * * *'  # Third commit at 11:30 PM UTC
-    - cron: '45 23 * * *'  # Fourth commit at 11:45 PM UTC
+    - cron: '0 22 * * *'  # Runs daily at 10:00 PM UTC (~3:45 AM in Nepal)
 
 jobs:
-  commit:
+  random-commits:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
-        fetch-depth: 0  # Ensures full history for better tracking
+        fetch-depth: 0
 
-    - name: Create file and commit
+    - name: Maybe make some commits 🤫
       run: |
-        FILE="commit_number.md"
-        
-        if [ ! -f "$FILE" ]; then
-          echo "Hello, my name is Niubi Verse" > "$FILE"
-          echo "commit number: 1" >> "$FILE"
+        RANDOM_DAY=$((RANDOM % 2))  # 50% chance to commit today
+
+        if [ "$RANDOM_DAY" -eq 1 ]; then
+          echo "Today is a commit day!"
+
+          NUM_COMMITS=$(( (RANDOM % 5) + 1 ))  # 1 to 5 commits
+
+          for i in $(seq 1 $NUM_COMMITS); do
+            echo "Making commit #$i..."
+
+            FILE="commit_number.md"
+
+            if [ ! -f "$FILE" ]; then
+              echo "Hello, my name is Niubi Verse" > "$FILE"
+              echo "commit number: 1" >> "$FILE"
+            else
+              CURRENT_COUNT=$(grep -oP 'commit number: \K\d+' "$FILE" || echo "0")
+              NEXT_COUNT=$((CURRENT_COUNT + 1))
+              sed -i "/commit number: /c\commit number: $NEXT_COUNT" "$FILE"
+            fi
+
+            git config --global user.name "niubi-verse"
+            git config --global user.email "niubiverse@gmail.com"
+
+            git add "$FILE"
+            git commit -m "Automated commit #$NEXT_COUNT"
+            git push origin main
+
+            # Random sleep between 1 to 20 minutes
+            SLEEP_TIME=$(( (RANDOM % 20 + 1) * 60 ))
+            echo "Sleeping for $((SLEEP_TIME / 60)) minutes before next commit..."
+            sleep $SLEEP_TIME
+          done
         else
-          CURRENT_COUNT=$(grep -oP 'commit number: \K\d+' "$FILE" || echo "0")
-          NEXT_COUNT=$((CURRENT_COUNT + 1))
-          sed -i "/commit number: /c\commit number: $NEXT_COUNT" "$FILE"
+          echo "No commit today."
         fi
-
-        git config --global user.name "niubi-verse"
-        git config --global user.email "niubiverse@gmail.com"
-
-        git add "$FILE"
-        git commit -m "Automated commit #$NEXT_COUNT"
-        git push origin main
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
