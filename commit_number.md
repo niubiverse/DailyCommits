@@ -1,2 +1,2 @@
 Hello, my name is Niubi Verse
-commit number: 706
+commit number: 707
